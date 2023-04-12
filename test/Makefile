@@ -7,9 +7,9 @@ endif
 TEST_BINARY = test_runner
 
 # Project specific path
-THIS_MAKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-THIS_MAKFILE_DIR := $(patsubst %/,%,$(dir $(THIS_MAKFILE_PATH)))
-TOPDIR = $(shell realpath $(THIS_MAKFILE_DIR)/..)
+THIS_MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+THIS_MAKEFILE_DIR := $(patsubst %/,%,$(dir $(THIS_MAKEFILE_PATH)))
+TOPDIR = $(shell realpath $(THIS_MAKEFILE_DIR)/..)
 SRC_DIR = $(TOPDIR)/src/TIC
 INC_DIR = $(TOPDIR)/include
 TEST_SRC_DIR = $(TOPDIR)/test
