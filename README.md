@@ -15,11 +15,11 @@ This library can parse both standard TIC (9600 bauds) or historical TIC (1200 ba
 
 ## Using the library
 
-In order for it to decode in real-time, you will have to regularly invoke [TIC::Unframer::pushBytes()](include/TIC/Unframer.h) with the new incoming bytes from your board serial port.
+In order for it to decode in real-time, you will have to regularly invoke [TIC::Unframer::pushBytes()](include/TIC/Unframer.h) with all TIC bytes received by the serial port of your device .
 
 ## Running unit tests
 
 To execute unit tests, run the following command from the sources top directory:
 ```
-make -C test check
+make check
 ```
