@@ -17,7 +17,12 @@ This library can parse both standard TIC (9600 bauds) or historical TIC (1200 ba
 
 ## Using the library
 
-In order for it to decode in real-time, you will have to regularly invoke [TIC::Unframer::pushBytes()](include/TIC/Unframer.h) with all TIC bytes received by the serial port of your device .
+In order for it to decode in real-time, you will have to regularly invoke [TIC::Unframer::pushBytes()](include/TIC/Unframer.h) with all TIC bytes received by the serial port of your device.
+
+There are a few compile-time options to enable/disable some specific code in the library:
+* `__TIC_UNFRAMER_FORWARD_FRAME_BYTES_ON_THE_FLY__` preprocessor directive will not cache whole TIC frames but directly forward frame bytes on the fly to the registered callback (which is going to be a dataset extractor most of the time)
+  In such a configuration, intermediate buffers are avoided and the only static buffer allocated will be located int the dataset exrtactor instance used to decode TIC data.
+* `__TIC_LIB_USE_STD_STRING__` preprocessor directive will enable toString() support for objects, but will imply a dependency on the stdlib's <string> headers, which may be an unwanted feature for small embedded systems (and is thus customizable).
 
 ## Running unit tests
 
