@@ -1,3 +1,5 @@
+![CI status](https://github.com/lains/ticdecodecpp/actions/workflows/main.yml/badge.svg)
+
 # C++ TIC decoding library
 
 French meters use a serial communication protocol called TeleInfo for customers (or TIC).
