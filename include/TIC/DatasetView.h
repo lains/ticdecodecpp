@@ -41,6 +41,25 @@ public:
 
     static Horodate fromLabelBytes(const uint8_t* bytes, unsigned int count);
 
+private:
+    /**
+     * @brief Comparison of timestamps with another horodate
+     * 
+     * @param other The other horodate to compare with
+     * @return int -1 is we are earlier than @other, 1 if we are later than @other and 0 if both are equal
+     * 
+     * @note We perform a raw timestamp field comparison, it is up to the caller to deal with metadata or validity (they are not checked)
+     */
+    int timeStampOnlyCmp(const TIC::Horodate& other) const;
+
+public:
+    bool operator==(const Horodate& other) const;
+    bool operator!=(const Horodate& other) const;
+    bool operator<(const Horodate& other) const;
+    bool operator>(const Horodate& other) const;
+    bool operator<=(const Horodate& other) const;
+    bool operator>=(const Horodate& other) const;
+
 #ifdef __TIC_LIB_USE_STD_STRING__
     std::string toString() const;
 #endif

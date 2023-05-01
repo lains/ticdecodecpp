@@ -813,6 +813,106 @@ TEST(TicHorodate_tests, TicHorodate_impossible_second) {
 	}
 }
 
+TEST(TicHorodate_tests, TicHorodate_equality) {
+	char sampleHorodate1AsCString[] = "H081225223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081225223518";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	if (!(horodate1 == horodate2)) {
+		FAILF("Expected horodate equality");
+	}
+	if (horodate1 != horodate2) {
+		FAILF("Expected horodate equality");
+	}
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference) {
+	char sampleHorodate1AsCString[] = "H081225223519";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081225223518";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	if (horodate1 == horodate2) {
+		FAILF("Expected horodate difference");
+	}
+	if (!(horodate1 != horodate2)) {
+		FAILF("Expected horodate difference");
+	}
+}
+
+void expect_horodate2_stricly_greater_than_horodate1(const TIC::Horodate& horodate1, const TIC::Horodate& horodate2) {
+	if (!(horodate2 > horodate1)) {
+		FAILF("Expected horodate2>horodate1");
+	}
+	if (!(horodate2 >= horodate1)) {
+		FAILF("Expected horodate2>=horodate1");
+	}
+	if (horodate2 <= horodate1) {
+		FAILF("Expected horodate2>horodate1");
+	}
+	if (horodate2 < horodate1) {
+		FAILF("Expected horodate2>horodate1");
+	}
+	if (horodate2 == horodate1) {
+		FAILF("Expected horodate2!=horodate1");
+	}
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference_1s) {
+	char sampleHorodate1AsCString[] = "H081225223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081225223519";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	expect_horodate2_stricly_greater_than_horodate1(horodate1, horodate2);
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference_1min) {
+	char sampleHorodate1AsCString[] = "H081225223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081225223618";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	expect_horodate2_stricly_greater_than_horodate1(horodate1, horodate2);
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference_1hour) {
+	char sampleHorodate1AsCString[] = "H081225223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081225233518";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	expect_horodate2_stricly_greater_than_horodate1(horodate1, horodate2);
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference_1day) {
+	char sampleHorodate1AsCString[] = "H081225223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081226223518";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	expect_horodate2_stricly_greater_than_horodate1(horodate1, horodate2);
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference_1month) {
+	char sampleHorodate1AsCString[] = "H081125223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e081225223518";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	expect_horodate2_stricly_greater_than_horodate1(horodate1, horodate2);
+}
+
+TEST(TicHorodate_tests, TicHorodate_difference_1year) {
+	char sampleHorodate1AsCString[] = "H081225223518";
+	TIC::Horodate horodate1 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate1AsCString), strlen(sampleHorodate1AsCString));
+	char sampleHorodate2AsCString[] = "e091225223518";
+	TIC::Horodate horodate2 = TIC::Horodate::fromLabelBytes(reinterpret_cast<uint8_t*>(sampleHorodate2AsCString), strlen(sampleHorodate2AsCString));
+
+	expect_horodate2_stricly_greater_than_horodate1(horodate1, horodate2);
+}
+
 #ifndef USE_CPPUTEST
 void runTicDatasetViewAllUnitTests() {
 	TicDatasetView_correct_sample_typical_historical_dataset();
@@ -838,6 +938,14 @@ void runTicDatasetViewAllUnitTests() {
 	TicHorodate_impossible_hour();
 	TicHorodate_impossible_minute();
 	TicHorodate_impossible_second();
+	TicHorodate_equality();
+	TicHorodate_difference();
+	TicHorodate_difference_1s();
+	TicHorodate_difference_1min();
+	TicHorodate_difference_1hour();
+	TicHorodate_difference_1day();
+	TicHorodate_difference_1month();
+	TicHorodate_difference_1year();
 }
 
 #endif	// USE_CPPUTEST

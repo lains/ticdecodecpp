@@ -70,6 +70,72 @@ TIC::Horodate TIC::Horodate::fromLabelBytes(const uint8_t* bytes, unsigned int c
     return result;
 }
 
+int TIC::Horodate::timeStampOnlyCmp(const TIC::Horodate& other) const {
+    if (this->year > other.year) return 1;
+    if (this->year < other.year) return -1;
+
+    if (this->month > other.month) return 1;
+    if (this->month < other.month) return -1;
+
+    if (this->day > other.day) return 1;
+    if (this->day < other.day) return -1;
+
+    if (this->hour > other.hour) return 1;
+    if (this->hour < other.hour) return -1;
+
+    if (this->minute > other.minute) return 1;
+    if (this->minute < other.minute) return -1;
+
+    if (this->second > other.second) return 1;
+    if (this->second < other.second) return -1;
+
+    return 0;
+}
+
+bool TIC::Horodate::operator==(const TIC::Horodate& other) const {
+    if (!this->isValid || !other.isValid)
+        return false;
+    
+    /* Only compare the date, not meta-data like season or degradedTime attributes */
+    return (this->timeStampOnlyCmp(other) == 0);
+}
+
+bool TIC::Horodate::operator!=(const TIC::Horodate& other) const {
+    return !(*this == other);
+}
+
+bool TIC::Horodate::operator>(const TIC::Horodate& other) const {
+    if (!this->isValid) return false; /* Invalid values are considered EPOCH, thus the minimum possible value */
+    if (!other.isValid) return true;
+
+    /* Only compare the date, not meta-data like season or degradedTime attributes */
+    return (this->timeStampOnlyCmp(other) > 0);
+}
+
+bool TIC::Horodate::operator<(const TIC::Horodate& other) const {
+    if (!this->isValid) return true; /* Invalid values are considered EPOCH, thus the minimum possible value */
+    if (!other.isValid) return false;
+
+    /* Only compare the date, not meta-data like season or degradedTime attributes */
+    return (this->timeStampOnlyCmp(other) < 0);
+}
+
+bool TIC::Horodate::operator>=(const TIC::Horodate& other) const {
+    if (!this->isValid) return false; /* Invalid values are considered EPOCH, thus the minimum possible value */
+    if (!other.isValid) return true;
+
+    /* Only compare the date, not meta-data like season or degradedTime attributes */
+    return (this->timeStampOnlyCmp(other) >= 0);
+}
+
+bool TIC::Horodate::operator<=(const TIC::Horodate& other) const {
+    if (!this->isValid) return true; /* Invalid values are considered EPOCH, thus the minimum possible value */
+    if (!other.isValid) return false;
+
+    /* Only compare the date, not meta-data like season or degradedTime attributes */
+    return (this->timeStampOnlyCmp(other) <= 0);
+}
+
 #ifdef __TIC_LIB_USE_STD_STRING__
 std::string TIC::Horodate::toString() const {
     if (!this->isValid) {
