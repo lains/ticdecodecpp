@@ -41,6 +41,14 @@ public:
 
     static Horodate fromLabelBytes(const uint8_t* bytes, unsigned int count);
 
+    /**
+     * @brief Make the current horodate go forward a given seconds in time
+     * 
+     * @param seconds The seconds to add
+     * @return true if the result is in the same day as the original value, false otherwise (in that case, the current horodate is *not* modified, calculation in cancelled)
+     */
+    bool addSeconds(unsigned int seconds);
+
 private:
     /**
      * @brief Comparison of timestamps with another horodate
@@ -129,3 +137,10 @@ public:
     Horodate horodate; /*!< The horodate for this dataset */
 };
 } // namespace TIC
+
+#ifdef __TIC_LIB_USE_STD_STRING__
+/* std::to_string() for Horodate */
+namespace std {
+    std::string to_string(const TIC::Horodate& horodate);
+}
+#endif

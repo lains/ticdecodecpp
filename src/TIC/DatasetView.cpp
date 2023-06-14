@@ -70,6 +70,28 @@ TIC::Horodate TIC::Horodate::fromLabelBytes(const uint8_t* bytes, unsigned int c
     return result;
 }
 
+bool TIC::Horodate::addSeconds(unsigned int seconds) {
+    uint8_t initialSecond = this->second;
+    uint8_t initialMinute = this->minute;
+    uint8_t initialHour = this->hour;
+    this->second+=30; /* Forward in time */
+    if (this->second < 60)
+        return true;
+    this->second = 0;
+    this->minute++;
+    if (this->minute < 60)
+        return true;
+    this->minute = 0;
+    this->hour++;
+    if (this->hour < 24)
+        return true;
+    /* Day overflow, cancel calculation, reset to initial values */
+    this->hour = initialHour;
+    this->minute = initialMinute;
+    this->second = initialSecond;
+    return false;
+}
+
 int TIC::Horodate::timeStampOnlyCmp(const TIC::Horodate& other) const {
     if (this->year > other.year) return 1;
     if (this->year < other.year) return -1;
