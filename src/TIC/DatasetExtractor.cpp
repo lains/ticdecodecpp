@@ -21,6 +21,7 @@ unsigned int TIC::DatasetExtractor::pushBytes(const uint8_t* buffer, unsigned in
     */
     if (len == 0)
         return 0;
+    //std::cout << "de got " << len << " bytes starting with: " << std::hex << static_cast<unsigned int>(buffer[0]) << " while " << std::string(this->sync?"inside":"outside") << " of a dataset\n";
     unsigned int usedBytes = 0;
     if (!this->sync) {  /* We don't record bytes, we'll just look for a start of dataset */
         uint8_t* firstStartOfDataset = (uint8_t*)(memchr(buffer, TIC::DatasetExtractor::START_MARKER, len));
@@ -41,7 +42,23 @@ unsigned int TIC::DatasetExtractor::pushBytes(const uint8_t* buffer, unsigned in
     }
     else {
         /* We are inside a TIC dataset, search for the end of dataset marker */
-        uint8_t* endOfDataset = (uint8_t*)(memchr(buffer, TIC::DatasetExtractor::END_MARKER, len)); /* Search for end of dataset */
+        //FIXME: historical TIC uses LF, standard TIC uses CR
+        //If we allow LD below, and we have transmission errors, we may become out of sync if we catch a wrong extraneous LF... we will be out of sync and get only empty datasets because we swap start and end markers
+        //We should have a way to recover from this, for example by detecting 0 size datasets and thus understand we need to invert sync state
+        uint8_t* probeEndOfDataset1 = nullptr; /* Attempt to detect the end of a dataset formatted with standard TIC */
+        uint8_t* probeEndOfDataset2 = nullptr; /* Attempt to detect the end of a dataset formatted with historical TIC */
+        uint8_t* endOfDataset = nullptr;
+        probeEndOfDataset1 = (uint8_t*)(memchr(buffer, TIC::DatasetExtractor::END_MARKER_TIC_1, len));
+        if (probeEndOfDataset1) {
+            endOfDataset = probeEndOfDataset1;
+        }
+        else {
+            probeEndOfDataset2 = (uint8_t*)(memchr(buffer, TIC::DatasetExtractor::END_MARKER_TIC_2, len)); /* Search for end of dataset formatted with historical TIC */
+            if (probeEndOfDataset2) {
+                endOfDataset = probeEndOfDataset2;
+            }
+        }
+        
         if (endOfDataset) {  /* We have an end of dataset marker in the buffer, we can extract the full dataset */
             unsigned int leadingBytesInPreviousDataset = endOfDataset - buffer;
             usedBytes = this->processIncomingDatasetBytes(buffer, leadingBytesInPreviousDataset, true);  /* Copy the buffer up to (but exclusing the end of dataset marker), the dataset is complete */
@@ -76,7 +93,10 @@ unsigned int TIC::DatasetExtractor::processIncomingDatasetBytes(const uint8_t* b
 }
 
 void TIC::DatasetExtractor::processCurrentDataset() {
-    this->onDatasetExtracted(this->currentDataset, this->nextWriteInCurrentDataset, this->onDatasetExtractedContext);
+    //std::vector<uint8_t> datasetContent(this->currentDataset, this->currentDataset+this->nextWriteInCurrentDataset);
+    //std::cout << "New dataset extracted: " << vectorToHexString(datasetContent) << " (as string: \"" << std::string(datasetContent.begin(), datasetContent.end()) << "\")\n";
+    if (this->onDatasetExtracted)
+        this->onDatasetExtracted(this->currentDataset, this->nextWriteInCurrentDataset, this->onDatasetExtractedContext);
 }
 
 bool TIC::DatasetExtractor::isInSync() const {

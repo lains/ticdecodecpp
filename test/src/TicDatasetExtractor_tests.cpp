@@ -6,6 +6,7 @@
 #include <string>
 #include <iterator>
 #include <cstring>
+#include <iomanip>
 
 #include "Tools.h"
 #include "TIC/DatasetExtractor.h"
@@ -60,6 +61,11 @@ static void datasetExtractorUnwrapForwardFrameBytes(const uint8_t* buf, unsigned
 	if (context == NULL)
 		return; /* Failsafe, discard if no context */
 	TIC::DatasetExtractor* de = static_cast<TIC::DatasetExtractor*>(context);
+	// std::cout << "Got " << cnt << " bytes: ";
+	// for (unsigned int i = 0; i < cnt; i++) {
+	// 	std::cout << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(buf[i]) << " ";
+	// }
+	// std::cout << "\n";
 	de->pushBytes(buf, cnt);
 }
 
@@ -72,6 +78,7 @@ static void datasetExtractorUnWrapFrameFinished(void *context) {
 	if (context == NULL)
 		return; /* Failsafe, discard if no context */
 	TIC::DatasetExtractor* de = static_cast<TIC::DatasetExtractor*>(context);
+	// std::cout << "Frame finished\n";
 	/* We have finished parsing a frame, if there is an open dataset, we should discard it and start over at the following frame */
 	de->reset();
 }
@@ -89,9 +96,9 @@ TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_dataset_10byte
 	}
 }
 
-TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_markers_10bytes) {
+TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_markers_10bytes_end_of_dataset_type1) {
 	uint8_t start_marker = TIC::DatasetExtractor::START_MARKER;
-	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER;
+	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER_TIC_1;
 	uint8_t buffer[] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 };
 	DatasetDecoderStub stub;
 	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
@@ -106,9 +113,45 @@ TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_
 	}
 }
 
-TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_bytes) {
+TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_markers_10bytes_end_of_dataset_type2) {
 	uint8_t start_marker = TIC::DatasetExtractor::START_MARKER;
-	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER;
+	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER_TIC_2;
+	uint8_t buffer[] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 };
+	DatasetDecoderStub stub;
+	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
+	de.pushBytes(&start_marker, 1);
+	de.pushBytes(buffer, sizeof(buffer));
+	de.pushBytes(&end_marker, 1);
+	if (stub.decodedDatasetList.size() != 1) {
+		FAILF("Wrong dataset count: %zu\nDatasets received:\n%s", stub.decodedDatasetList.size(), stub.toString().c_str());
+	}
+	if (stub.decodedDatasetList[0] != std::vector<uint8_t>({0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39})) {
+		FAILF("Wrong dataset decoded: %s", vectorToHexString(stub.decodedDatasetList[0]).c_str());
+	}
+}
+
+TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_bytes_end_of_dataset_type1) {
+	uint8_t start_marker = TIC::DatasetExtractor::START_MARKER;
+	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER_TIC_1;
+	uint8_t buffer[] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 };
+	DatasetDecoderStub stub;
+	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
+	de.pushBytes(&start_marker, 1);
+	for (unsigned int pos = 0; pos < sizeof(buffer); pos++) {
+		de.pushBytes(buffer + pos, 1);
+	}
+	de.pushBytes(&end_marker, 1);
+	if (stub.decodedDatasetList.size() != 1) {
+		FAILF("Wrong dataset count: %zu\nDatasets received:\n%s", stub.decodedDatasetList.size(), stub.toString().c_str());
+	}
+	if (stub.decodedDatasetList[0] != std::vector<uint8_t>({0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39})) {
+		FAILF("Wrong dataset decoded: %s", vectorToHexString(stub.decodedDatasetList[0]).c_str());
+	}
+}
+
+TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_bytes_end_of_dataset_type2) {
+	uint8_t start_marker = TIC::DatasetExtractor::START_MARKER;
+	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER_TIC_2;
 	uint8_t buffer[] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 };
 	DatasetDecoderStub stub;
 	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
@@ -131,11 +174,11 @@ TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_
 	buffer[0] = TIC::DatasetExtractor::START_MARKER;
 	for (unsigned int pos = 1; pos < sizeof(buffer) - 1 ; pos++) {
 		buffer[pos] = (uint8_t)(pos & 0xff);
-		if (buffer[pos] == TIC::DatasetExtractor::START_MARKER || buffer[pos] == TIC::DatasetExtractor::END_MARKER || buffer[pos] == TIC::Unframer::START_MARKER || buffer[pos] == TIC::Unframer::END_MARKER) {
+		if (buffer[pos] == TIC::DatasetExtractor::START_MARKER || buffer[pos] == TIC::DatasetExtractor::END_MARKER_TIC_1 || buffer[pos] == TIC::Unframer::START_MARKER || buffer[pos] == TIC::Unframer::END_MARKER) {
 			buffer[pos] = 0x00;	/* Remove any frame of dataset delimiters */
 		}
 	}
-	buffer[sizeof(buffer) - 1] = TIC::DatasetExtractor::END_MARKER;
+	buffer[sizeof(buffer) - 1] = TIC::DatasetExtractor::END_MARKER_TIC_1;
 	DatasetDecoderStub stub;
 	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
 	de.pushBytes(buffer, sizeof(buffer) / 2);
@@ -148,9 +191,28 @@ TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_
 	}
 }
 
-TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves) {
+TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves_end_of_dataset_type1) {
 	uint8_t start_marker = TIC::DatasetExtractor::START_MARKER;
-	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER;
+	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER_TIC_1;
+	uint8_t buffer[] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 };
+	DatasetDecoderStub stub;
+	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
+	de.pushBytes(&start_marker, 1);
+	for (uint8_t pos = 0; pos < sizeof(buffer); pos++) {
+		de.pushBytes(buffer + pos, 1);
+	}
+	de.pushBytes(&end_marker, 1);
+	if (stub.decodedDatasetList.size() != 1) {
+		FAILF("Wrong dataset count: %zu\nDatasets received:\n%s", stub.decodedDatasetList.size(), stub.toString().c_str());
+	}
+	if (stub.decodedDatasetList[0] != std::vector<uint8_t>({0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39})) {
+		FAILF("Wrong dataset decoded: %s", vectorToHexString(stub.decodedDatasetList[0]).c_str());
+	}
+}
+
+TEST(TicDatasetExtractor_tests, TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves_end_of_dataset_type2) {
+	uint8_t start_marker = TIC::DatasetExtractor::START_MARKER;
+	uint8_t end_marker = TIC::DatasetExtractor::END_MARKER_TIC_2;
 	uint8_t buffer[] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 };
 	DatasetDecoderStub stub;
 	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
@@ -212,7 +274,56 @@ TEST(TicDatasetExtractor_tests, Chunked_sample_unframe_dsextract_historical_TIC)
 		expectedTotalDatasetCount += 6;	/* 6 more trailing dataset within an unterminated frame */
 #endif
 
-		if (stub.decodedDatasetList.size() != expectedTotalDatasetCount) { 
+		if (stub.decodedDatasetList.size() != expectedTotalDatasetCount) {
+			FAILF("When using chunk size %u: Wrong dataset count: %zu, expected %zu\nDatasets received:\n%s", chunkSize, stub.decodedDatasetList.size(), expectedTotalDatasetCount, stub.toString().c_str());
+		}
+		char firstDatasetAsCString[] = "ADCO 056234673197 L";
+		std::vector<uint8_t> expectedFirstDatasetInFrame(firstDatasetAsCString, firstDatasetAsCString+strlen(firstDatasetAsCString));
+		if (stub.decodedDatasetList[0] != expectedFirstDatasetInFrame) {
+			FAILF("Unexpected first dataset in first frame:\nGot:      %s\nExpected: %s\n", vectorToHexString(stub.decodedDatasetList[0]).c_str(), vectorToHexString(expectedFirstDatasetInFrame).c_str());
+		}
+		char lastDatasetAsCString[] = "PPOT 00 #";
+		std::vector<uint8_t> expectedLastDatasetInFrame(lastDatasetAsCString, lastDatasetAsCString+strlen(lastDatasetAsCString));
+		if (stub.decodedDatasetList[nbExpectedDatasetPerFrame-1] != expectedLastDatasetInFrame) {
+			FAILF("Unexpected last dataset in first frame:\nGot:      %s\nExpected: %s\n", vectorToHexString(stub.decodedDatasetList[nbExpectedDatasetPerFrame-1]).c_str(), vectorToHexString(expectedLastDatasetInFrame).c_str());
+		}
+		for (std::size_t datasetIndex = 0; datasetIndex < stub.decodedDatasetList.size(); datasetIndex++) {
+			std::size_t receivedDatasetSize = stub.decodedDatasetList[datasetIndex].size();
+			std::size_t expectedDatasetSize = datasetExpectedSizes[datasetIndex % nbExpectedDatasetPerFrame];
+			if (receivedDatasetSize != expectedDatasetSize) {
+				FAILF("When using chunk size %u: Wrong dataset decoded at index %zu in frame. Expected %zu bytes, got %zu bytes. Dataset content: %s", chunkSize, datasetIndex, expectedDatasetSize, receivedDatasetSize, vectorToHexString(stub.decodedDatasetList[datasetIndex]).c_str());
+			}
+		}
+	}
+}
+
+TEST(TicDatasetExtractor_tests, Chunked_sample_unframe_dsextract_historical_TIC_2) {
+	std::vector<uint8_t> ticData = readVectorFromDisk("./samples/continuous_linky_3P_historical_TIC_2024_sample.bin");
+
+	for (unsigned int chunkSize = 1; chunkSize <= TIC::DatasetExtractor::MAX_DATASET_SIZE; chunkSize++) {
+		DatasetDecoderStub stub;
+		TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
+		TIC::Unframer tu(datasetExtractorUnwrapForwardFrameBytes, datasetExtractorUnWrapFrameFinished, &de);
+
+		TicUnframer_test_file_sent_by_chunks(ticData, chunkSize, tu);
+
+		/**
+		 * @brief Sizes (in bytes) of the successive dataset in each repeated TIC frame
+		 */
+		std::size_t datasetExpectedSizes[] = { 19, /* ADCO label */
+		                                       14, 11, 16, 11,
+		                                       12, 12, 12, /* Three times IINST? labels (on each phase) */
+		                                       11, 11, 11, /* Three times IMAX? labels (on each phase) */
+		                                       12, 12, 9, 17, 9
+		                                     };
+		unsigned int nbExpectedDatasetPerFrame = sizeof(datasetExpectedSizes)/sizeof(datasetExpectedSizes[0]);
+
+		std::size_t expectedTotalDatasetCount = 4 * nbExpectedDatasetPerFrame; /* 4 frames, each containing the above datasets */
+#ifdef __TIC_UNFRAMER_FORWARD_FRAME_BYTES_ON_THE_FLY__
+		expectedTotalDatasetCount += 7;	/* 7 more trailing dataset within an unterminated frame */
+#endif
+
+		if (stub.decodedDatasetList.size() != expectedTotalDatasetCount) {
 			FAILF("When using chunk size %u: Wrong dataset count: %zu, expected %zu\nDatasets received:\n%s", chunkSize, stub.decodedDatasetList.size(), expectedTotalDatasetCount, stub.toString().c_str());
 		}
 		char firstDatasetAsCString[] = "ADCO 056234673197 L";
@@ -288,11 +399,15 @@ TEST(TicDatasetExtractor_tests, Chunked_sample_unframe_dsextract_standard_TIC) {
 #ifndef USE_CPPUTEST
 void runTicDatasetExtractorAllUnitTests() {
 	TicDatasetExtractor_test_one_pure_dataset_10bytes();
-	TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_markers_10bytes();
-	TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_bytes();
+	TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_markers_10bytes_end_of_dataset_type1();
+	TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_markers_10bytes_end_of_dataset_type2();
+	TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_bytes_end_of_dataset_type1();
+	TicDatasetExtractor_test_one_pure_stx_etx_frame_standalone_bytes_end_of_dataset_type2();
 	TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves_max_buffer();
-	TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves();
+	TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves_end_of_dataset_type1();
+	TicDatasetExtractor_test_one_pure_stx_etx_frame_two_halves_end_of_dataset_type2();
 	Chunked_sample_unframe_dsextract_historical_TIC();
+	Chunked_sample_unframe_dsextract_historical_TIC_2();
 	Chunked_sample_unframe_dsextract_standard_TIC();
 }
 #endif	// USE_CPPUTEST

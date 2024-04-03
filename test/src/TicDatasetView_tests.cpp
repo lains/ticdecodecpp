@@ -215,7 +215,7 @@ TEST(TicDatasetView_tests, TicDatasetView_extra_leading_start_marker) {
 
 TEST(TicDatasetView_tests, TicDatasetView_extra_trailing_end_marker) {
 	char dataset[] = 	{ "ADCO 012345678901 E*"};
-	dataset[sizeof(dataset)-1-1] = TIC::DatasetExtractor::END_MARKER; /* Replace the * with our end marker (-1 to get inside the buffer, -1 again to move before the terminating '\0') */
+	dataset[sizeof(dataset)-1-1] = TIC::DatasetExtractor::END_MARKER_TIC_1; /* Replace the * with our end marker (-1 to get inside the buffer, -1 again to move before the terminating '\0') */
 
 	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
 

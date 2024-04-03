@@ -50,7 +50,8 @@ public:
     static constexpr uint8_t LF = 0x0a;
     static constexpr uint8_t CR = 0x0d;
     static constexpr uint8_t START_MARKER = LF; /*!< Dataset start marker (line feed) */
-    static constexpr uint8_t END_MARKER = CR; /*!< Dataset end marker (carriage return) */
+    static constexpr uint8_t END_MARKER_TIC_1 = CR; /*!< 1st possible dataset end marker for TIC (carriage return) */
+    static constexpr uint8_t END_MARKER_TIC_2 = LF; /*!< 2nd possible dataset end marker for TIC (line feed) */
     static constexpr unsigned int MAX_DATASET_SIZE = 128; /*!< Max size for a dataset storage (in bytes) */
 
 /* Methods */

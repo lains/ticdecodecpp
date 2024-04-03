@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include "stdint.h"
 
 std::string vectorToHexString(const std::vector<uint8_t> &vec);
 
