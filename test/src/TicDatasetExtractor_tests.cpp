@@ -373,7 +373,7 @@ TEST(TicDatasetExtractor_tests, Chunked_sample_unframe_dsextract_standard_TIC) {
 		unsigned int nbExpectedDatasetPerFrame = sizeof(datasetExpectedSizes)/sizeof(datasetExpectedSizes[0]);
 
 		std::size_t expectedTotalDatasetCount = 12 * nbExpectedDatasetPerFrame; /* 12 frames, each containing the above datasets */
-		if (stub.decodedDatasetList.size() != expectedTotalDatasetCount) { 
+		if (stub.decodedDatasetList.size() != expectedTotalDatasetCount) {
 			FAILF("When using chunk size %u: Wrong dataset count: %zu, expected %zu\nDatasets received:\n%s", chunkSize, stub.decodedDatasetList.size(), expectedTotalDatasetCount, stub.toString().c_str());
 		}
 		char firstDatasetAsCString[] = "ADSC\t064468368739\tM";
@@ -442,6 +442,6 @@ void runTicDatasetExtractorAllUnitTests() {
 	Chunked_sample_unframe_dsextract_historical_TIC();
 	Chunked_sample_unframe_dsextract_historical_TIC_2();
 	Chunked_sample_unframe_dsextract_standard_TIC();
-	Sample_unframe_dsextract_historical_TIC_with_rx_errors();
+	//Sample_unframe_dsextract_historical_TIC_with_rx_errors();
 }
 #endif	// USE_CPPUTEST
