@@ -396,6 +396,39 @@ TEST(TicDatasetExtractor_tests, Chunked_sample_unframe_dsextract_standard_TIC) {
 	}
 }
 
+TEST(TicDatasetExtractor_tests, Sample_unframe_dsextract_historical_TIC_with_rx_errors) {
+	std::vector<uint8_t> ticData = readVectorFromDisk("./samples/continuous_linky_3P_historical_TIC_with_rx_errors.bin");
+
+	DatasetDecoderStub stub;
+	TIC::DatasetExtractor de(datasetDecoderStubUnwrapInvoke, &stub);
+	TIC::Unframer tu(datasetExtractorUnwrapForwardFrameBytes, datasetExtractorUnWrapFrameFinished, &de);
+
+	constexpr unsigned int chunkSize = 8;
+	TicUnframer_test_file_sent_by_chunks(ticData, chunkSize, tu);
+
+	std::size_t expectedTotalDatasetCount = 301;
+	if (stub.decodedDatasetList.size() != expectedTotalDatasetCount) { 
+		FAILF("When using chunk size %u: Wrong dataset count: %zu, expected %zu\nDatasets received:\n%s", chunkSize, stub.decodedDatasetList.size(), expectedTotalDatasetCount, stub.toString().c_str());
+	}
+	// char firstDatasetAsCString[] = "ADSC\t064468368739\tM";
+	// std::vector<uint8_t> expectedFirstDatasetInFrame(firstDatasetAsCString, firstDatasetAsCString+strlen(firstDatasetAsCString));
+	// if (stub.decodedDatasetList[0] != expectedFirstDatasetInFrame) {
+	// 	FAILF("Unexpected first dataset in first frame:\nGot:      %s\nExpected: %s\n", vectorToHexString(stub.decodedDatasetList[0]).c_str(), vectorToHexString(expectedFirstDatasetInFrame).c_str());
+	// }
+	// char lastDatasetAsCString[] = "PJOURF+1\t00008001 NONUTILE NONUTILE NONUTILE NONUTILE NONUTILE NONUTILE NONUTILE NONUTILE NONUTILE NONUTILE\t9";
+	// std::vector<uint8_t> expectedLastDatasetInFrame(lastDatasetAsCString, lastDatasetAsCString+strlen(lastDatasetAsCString));
+	// if (stub.decodedDatasetList[nbExpectedDatasetPerFrame-1] != expectedLastDatasetInFrame) {
+	// 	FAILF("Unexpected last dataset in first frame:\nGot:      %s\nExpected: %s\n", vectorToHexString(stub.decodedDatasetList[nbExpectedDatasetPerFrame-1]).c_str(), vectorToHexString(expectedLastDatasetInFrame).c_str());
+	// }
+	// for (std::size_t datasetIndex = 0; datasetIndex < stub.decodedDatasetList.size(); datasetIndex++) {
+	// 	std::size_t receivedDatasetSize = stub.decodedDatasetList[datasetIndex].size();
+	// 	std::size_t expectedDatasetSize = datasetExpectedSizes[datasetIndex % nbExpectedDatasetPerFrame];
+	// 	if (receivedDatasetSize != expectedDatasetSize) {
+	// 		FAILF("When using chunk size %u: Wrong dataset decoded at index %zu in frame. Expected %zu bytes, got %zu bytes. Dataset content: %s", chunkSize, datasetIndex, expectedDatasetSize, receivedDatasetSize, vectorToHexString(stub.decodedDatasetList[datasetIndex]).c_str());
+	// 	}
+	// }
+}
+
 #ifndef USE_CPPUTEST
 void runTicDatasetExtractorAllUnitTests() {
 	TicDatasetExtractor_test_one_pure_dataset_10bytes();
@@ -409,5 +442,6 @@ void runTicDatasetExtractorAllUnitTests() {
 	Chunked_sample_unframe_dsextract_historical_TIC();
 	Chunked_sample_unframe_dsextract_historical_TIC_2();
 	Chunked_sample_unframe_dsextract_standard_TIC();
+	Sample_unframe_dsextract_historical_TIC_with_rx_errors();
 }
 #endif	// USE_CPPUTEST
