@@ -413,6 +413,37 @@ TEST(TicDatasetView_tests, TicDatasetView_standard_with_horodate_and_value) {
 	}
 }
 
+TEST(TicDatasetView_tests, TicDatasetView_historical_with_value) {
+	const char dataset[] = "PAPP 00750 -";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (!dv.isValid()) {
+		FAILF("Dataset shoud be valid");
+	}
+
+	if (dv.labelBuffer == nullptr) {
+		FAILF("NULL labelBuffer");
+	}
+	std::vector<uint8_t> labelBufferVec(dv.labelBuffer, dv.labelBuffer + dv.labelSz);
+	if (labelBufferVec != std::vector<uint8_t>({'P', 'A', 'P', 'P'})) {
+		FAILF("Wrong dataset label: %s", vectorToHexString(labelBufferVec).c_str());
+	}
+
+	if (dv.dataBuffer == nullptr) {
+		FAILF("NULL dataBuffer");
+	}
+	std::vector<uint8_t> dataBufferVec(dv.dataBuffer, dv.dataBuffer + dv.dataSz);
+	if (dataBufferVec != std::vector<uint8_t>({'0', '0', '7', '5', '0'})) {
+		FAILF("Wrong dataset data: %s", vectorToHexString(dataBufferVec).c_str());
+	}
+
+	if (dv.horodate.isValid) {
+		FAILF("Expected no horodate");
+	}
+}
+
 /**
  * @brief Send the content of a file to a TIC::Unframer, cutting it into chunks
  * 
@@ -650,6 +681,120 @@ TEST(TicDatasetView_tests, TicDatasetView_uint32FromValueBuffer) {
 	}
 	if (TIC::DatasetView::uint32FromValueBuffer((const uint8_t*)("99999999999999"), 14) != (uint32_t)-1) {
 		FAILF("Failed parsing value");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_labelEquals) {
+	const char dataset[] = "PAPP 00750 -";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.labelBuffer == nullptr) {
+		FAILF("NULL labelBuffer");
+	}
+
+	if (!dv.labelEquals("PAPP")) {
+		FAILF("Expected label match");
+	}
+	if (dv.labelEquals("PAP")) {
+		FAILF("Expected label mismatch");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnValidValue) {
+	const char dataset[] = "URMS1\t230\t?";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.dataBuffer == nullptr) {
+		FAILF("NULL dataBuffer");
+	}
+
+	if (dv.dataToUint32() != 230) {
+		FAILF("Failed to convert label to uint32");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnValidValueWith0Prefix) {
+	const char dataset[] = "PAPP 00750 -";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.dataBuffer == nullptr) {
+		FAILF("NULL dataBuffer");
+	}
+	if (dv.dataToUint32() != 750) {
+		FAILF("Failed to convert label to uint32");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnValidValue0) {
+	const char dataset[] = "EASD02\t000000000\t!";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.dataBuffer == nullptr) {
+		FAILF("NULL dataBuffer");
+	}
+	if (dv.dataToUint32() != 0) {
+		FAILF("Failed to convert label to uint32");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnNegativeValue) {
+	const char dataset[] = "IINST2 -002 8";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.dataBuffer == nullptr) {
+		FAILF("NULL dataBuffer");
+	}
+	if (!dv.isValid()) {
+		FAILF("Expecting a valid data");
+	}
+	if (dv.dataToUint32() != (uint32_t)-1) {
+		FAILF("Should not convert invalid data to anything else than (uint32_t)-1");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnInvalidCRC) {
+	const char dataset[] = "PAPP 00750 A";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.dataToUint32() != (uint32_t)-1) {
+		FAILF("Should not convert invalid data to anything else than (uint32_t)-1");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnNonDigitValue) {
+	const char dataset[] = "PAPP 0a75b P";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (!dv.isValid()) {
+		FAILF("Expecting a valid data");
+	}
+	if (dv.dataToUint32() != (uint32_t)-1) {
+		FAILF("Should not convert invalid data to anything else than (uint32_t)-1");
+	}
+}
+
+TEST(TicDatasetView_tests, TicDatasetView_dataToUint32OnEmptyValue) {
+	const char dataset[] = "PAPP  1";
+	const uint8_t* datasetBuf = reinterpret_cast<const unsigned char*>(dataset);
+
+	TIC::DatasetView dv((const uint8_t*)datasetBuf, static_cast<unsigned int>(strlen(dataset)));
+	
+	if (dv.dataToUint32() != (uint32_t)-1) {
+		FAILF("Should not convert invalid data to anything else than (uint32_t)-1");
 	}
 }
 
@@ -925,9 +1070,18 @@ void runTicDatasetViewAllUnitTests() {
 	TicDatasetView_too_short();
 	TicDatasetView_valid_with_horodate_without_value();
 	TicDatasetView_standard_with_horodate_and_value();
-	TicDatasetView_uint32FromValueBuffer();
+	TicDatasetView_historical_with_value();
 	Chunked_sample_unframe_dsextract_decode_historical_TIC();
 	Chunked_sample_unframe_dsextract_decode_standard_TIC();
+	TicDatasetView_uint32FromValueBuffer();
+	TicDatasetView_labelEquals();
+	TicDatasetView_dataToUint32OnValidValue();
+	TicDatasetView_dataToUint32OnValidValueWith0Prefix();
+	TicDatasetView_dataToUint32OnValidValue0();
+	TicDatasetView_dataToUint32OnNegativeValue();
+	TicDatasetView_dataToUint32OnInvalidCRC();
+	TicDatasetView_dataToUint32OnNonDigitValue();
+	TicDatasetView_dataToUint32OnEmptyValue();
 	TicHorodate_sample_date1();
 	TicHorodate_sample_date2();
 	TicHorodate_sample_season_NA();

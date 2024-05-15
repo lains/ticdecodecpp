@@ -262,6 +262,7 @@ horodate() {
     this->dataSz = 0;
 
     if (computedCrc != crcByte) {
+        // printf("Invalid CRC character, got '%c', expected '%c'\n", crcByte, computedCrc);
         this->decodedType = TIC::DatasetView::DatasetType::WrongCRC;
         this->labelSz = 0;
         this->dataSz = 0;
@@ -337,6 +338,9 @@ uint8_t TIC::DatasetView::computeCRC(const uint8_t* bytes, unsigned int count) {
 
 uint32_t TIC::DatasetView::uint32FromValueBuffer(const uint8_t* buf, unsigned int cnt) {
     uint32_t result = 0;
+    if (cnt == 0)
+        return -1;  /* No digit at all */
+
     for (unsigned int idx = 0; idx < cnt; idx++) {
         uint8_t digit = buf[idx];
         if (digit < '0' || digit > '9') {   /* Invalid decimal value */
@@ -352,4 +356,19 @@ uint32_t TIC::DatasetView::uint32FromValueBuffer(const uint8_t* buf, unsigned in
         result += (digit - '0');    /* Take this digit into account */
     }
     return result;
+}
+
+bool TIC::DatasetView::labelEquals(const char* cString) const {
+    if (cString == nullptr)
+        return false;
+    if (!this->isValid())
+        return false;
+    size_t cStringLen = strlen(cString);
+    return (this->labelSz == cStringLen && memcmp(this->labelBuffer, cString, cStringLen) == 0);
+}
+
+uint32_t TIC::DatasetView::dataToUint32() const {
+    if (!this->isValid() || this->dataBuffer == nullptr)
+        return -1;
+    return TIC::DatasetView::uint32FromValueBuffer(this->dataBuffer, this->dataSz);
 }

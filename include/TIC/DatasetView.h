@@ -124,6 +124,23 @@ public:
      */
     static uint32_t uint32FromValueBuffer(const uint8_t* buf, unsigned int cnt);
 
+    /**
+     * @brief Check if the current data label matches the one provided as argument
+     * 
+     * @param cString The C-style string to compare to
+     * 
+     * @return true if the data is valid and matches the provided string
+     */
+    bool labelEquals(const char* cString) const;
+
+    /**
+     * @brief Converts the current data value to an 32-bit unsigned int
+     * 
+     * @return The decoded unsigned int value, or -1 in case of errors (value does not contain a positive number or dataset is invalid)
+     */
+    uint32_t dataToUint32() const;
+
+
 private:
     static uint8_t computeCRC(const uint8_t* bytes, unsigned int count);
 

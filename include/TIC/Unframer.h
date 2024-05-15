@@ -66,7 +66,7 @@ public:
     /**
      * @brief Construct a new TIC::Unframer object
      * 
-     * @param onNewFrameBytes A FOnNewFrameBytesFunc function to invoke for each byte received in the current TIC frame received
+     * @param onNewFrameBytes A FOnNewFrameBytesFunc function to invoke for each byte received in the current TIC frame
      * @param onFrameComplete A FOnFrameCompleteFunc function to invoke after a full TiC frame has been received
      * @param parserFuncContext A user-defined pointer that will be passed as last argument when invoking onFrameComplete()
      * 
